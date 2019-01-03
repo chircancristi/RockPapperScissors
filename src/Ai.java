@@ -4,6 +4,6 @@ public class Ai {
 
     int pickMove(){
         Random random = new Random();
-        return random.nextInt(3 - 1 + 1) + 1;
+        return random.nextInt(3) + 1;
     }
 }

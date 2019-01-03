@@ -1,80 +1,101 @@
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Scanner;
+
 public class Game {
-    int gamesPlayed=0,playerGamesWon=0,aiGamesWon=0;
-    Ai ai=new Ai();
 
-    void playGame(){
-        int aiPick=ai.pickMove();
-        int playerPick;
+    int gamesPlayed;
+    int playerGamesWon;
+    int aiGamesWon;
 
-         while(true) {
-            System.console().writer().println("rock paper scissors\n");
-            String input = System.console().readLine();
+    Ai ai;
 
-            playerPick=getPlayersMove(input);
-            if (playerPick!=-1) break;
-        }
-        pickWinner(aiPick,playerPick);
+    Map<Integer, Integer> rules;
+
+    Game() {
+        this.gamesPlayed = 0;
+        this.playerGamesWon = 0;
+        this.aiGamesWon = 0;
+
+        this.ai = new Ai();
+
+        this.rules = new HashMap<>();
+
+        this.rules.put(1, 3);
+        this.rules.put(2, 1);
+        this.rules.put(3, 2);
     }
-    int getPlayersMove(String input){
+
+    void playGame() {
+        int aiPick = ai.pickMove();
         int playerPick;
-        if (input.equals("rock")==true) {
-            playerPick = 1;
+        Scanner scan = new Scanner(System.in);
+
+        while (true) {
+            System.out.println("rock paper scissors\n");
+            String input = scan.nextLine();
+
+            playerPick = getPlayersMove(input);
+            if (playerPick != -1)
+                break;
         }
-        else {
-            if (input.equals("paper")==true) {
-                playerPick = 3;
-            }
-            else{
-                if (input.equals("scissors")==true) {
-                    playerPick = 3;
-                }
-                else {
-                    System.console().writer().println("There is no such thing, please try again\n");
-                    playerPick= -1;
-                }
-            }
-        }
-        return playerPick;
+        pickWinner(aiPick, playerPick);
+        this.gamesPlayed++;
     }
-    void pickWinner(int aiPick , int playerPick){
-        if (aiPick==playerPick){
-            System.console().writer().println("It's a tie, let's do this again!\n");
-            playGame();
+
+    int getPlayersMove(String input) {
+        switch (input) {
+            case "rock": {
+                return 1;
+            }
+
+            case "paper": {
+                return 2;
+            }
+
+            case "scissors": {
+                return 3;
+            }
+
+            default:
+                return -1;
         }
-        else {
-            if (playerPick==1 && aiPick==2){
-                System.console().writer().println("Player - Rock\n" + "Robot - Paper\n");
-                System.console().writer().println("You lost! \n");
-                this.aiGamesWon++;
+    }
+
+    void pickWinner(int aiPick, int playerPick) {
+        System.out.println("Player - " + this.intToPick(playerPick) + "\nRobot - " + this.intToPick(aiPick) + "\n");
+
+        if (aiPick == playerPick) {
+            System.out.println("It's a tie, let's do this again!\n");
+            return;
+        }
+
+        if (this.rules.get(playerPick) == aiPick) {
+            System.out.println("You win!\n\n");
+            this.playerGamesWon++;
+        } else {
+            System.out.println("You lost!\n\n");
+            this.aiGamesWon++;
+        }
+    }
+
+
+    private String intToPick(int move) {
+        switch (move) {
+            case 1: {
+                return "rock";
             }
-            if (playerPick==1 && aiPick==3){
-                System.console().writer().println("Player - Rock\n" + "Robot - Scissors\n");
-                System.console().writer().println("You win! \n");
-                this.playerGamesWon++;
+
+            case 2: {
+                return "paper";
             }
-            if (playerPick==2 && aiPick==1){
-                System.console().writer().println("Player - Paper\n" + "Robot - Rock\n");
-                System.console().writer().println("You win! \n");
-                this.playerGamesWon++;
+
+            case 3: {
+                return "scissors";
             }
-            if (playerPick==2 && aiPick==3){
-                System.console().writer().println("Player - Paper\n" + "Robot - Scissors\n");
-                System.console().writer().println("You lost! \n");
-                this.aiGamesWon++;
-            }
-            if (playerPick==3 && aiPick==1){
-                System.console().writer().println("Player - Scissors\n" + "Robot - Rock\n");
-                System.console().writer().println("You lost! \n");
-                this.aiGamesWon++;
-            }
-            if (playerPick==3 && aiPick==2){
-                System.console().writer().println("Player - Scissors\n" + "Robot - Paper\n");
-                System.console().writer().println("You win! \n");
-                this.playerGamesWon++;
-            }
-            this.gamesPlayed++;
-            System.console().writer().println("Enter any key to continue\n");
-            String input = System.console().readLine();
+
+            default:
+                return null;
         }
     }
 }
