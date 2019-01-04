@@ -1,5 +1,6 @@
-import java.util.HashMap;
-import java.util.Map;
+import GameComponents.Move;
+import GameComponents.Rules;
+
 import java.util.Scanner;
 
 public class Game {
@@ -10,7 +11,7 @@ public class Game {
 
     Ai ai;
 
-    Map<Integer, Integer> rules;
+    Rules rules;
 
     Game() {
         this.gamesPlayed = 0;
@@ -19,83 +20,69 @@ public class Game {
 
         this.ai = new Ai();
 
-        this.rules = new HashMap<>();
-
-        this.rules.put(1, 3);
-        this.rules.put(2, 1);
-        this.rules.put(3, 2);
+        this.rules = new Rules();
     }
 
     void playGame() {
         int aiPick = ai.pickMove();
-        int playerPick;
+        Move aiMove = this.rules.getMoveWithNumericValue(aiPick);
+
         Scanner scan = new Scanner(System.in);
+        String input;
+        Move playerMove;
 
         while (true) {
             System.out.println("rock paper scissors\n");
-            String input = scan.nextLine();
 
-            playerPick = getPlayersMove(input);
-            if (playerPick != -1)
+            input = scan.nextLine();
+
+            playerMove = this.rules.getMoveWithName(input);
+            if (playerMove != null){
                 break;
+            } else {
+                System.out.println("UNACCEPTABLE! Pick again!");
+            }
+
         }
-        pickWinner(aiPick, playerPick);
+
+        pickWinner(aiMove, playerMove);
         this.gamesPlayed++;
     }
 
-    int getPlayersMove(String input) {
-        switch (input) {
-            case "rock": {
-                return 1;
-            }
+    void pickWinner(Move aiMove, Move playerMove) {
+        System.out.println("Player - " + playerMove.name + "\nRobot - " + aiMove.name + "\n");
 
-            case "paper": {
-                return 2;
-            }
-
-            case "scissors": {
-                return 3;
-            }
-
-            default:
-                return -1;
-        }
-    }
-
-    void pickWinner(int aiPick, int playerPick) {
-        System.out.println("Player - " + this.intToPick(playerPick) + "\nRobot - " + this.intToPick(aiPick) + "\n");
-
-        if (aiPick == playerPick) {
-            System.out.println("It's a tie, let's do this again!\n");
-            return;
-        }
-
-        if (this.rules.get(playerPick) == aiPick) {
-            System.out.println("You win!\n\n");
-            this.playerGamesWon++;
-        } else {
-            System.out.println("You lost!\n\n");
-            this.aiGamesWon++;
-        }
-    }
-
-
-    private String intToPick(int move) {
-        switch (move) {
+        switch (this.rules.joust(playerMove, aiMove)){
             case 1: {
-                return "rock";
+                System.out.println("You win!\n\n");
+                this.playerGamesWon++;
+                this.ai.didIWin = -1;
+                break;
             }
 
-            case 2: {
-                return "paper";
+            case -1: {
+                System.out.println("You lost!\n\n");
+                this.aiGamesWon++;
+                this.ai.didIWin = 1;
+                break;
             }
 
-            case 3: {
-                return "scissors";
+            case 0: {
+                System.out.println("It's a tie, let's do this again!\n");
+                this.ai.didIWin = 0;
+                break;
             }
-
-            default:
-                return null;
         }
+        if (this.ai.aiLastSixMoves.size()<6){
+            this.ai.aiLastSixMoves.add(playerMove);
+        }
+        else{
+            this.ai.aiLastSixMoves.removeFirst();
+            this.ai.aiLastSixMoves.add(playerMove);
+
+        }
+        this.ai.aiMoves.add(aiMove);
+        this.ai.playerMoves.add(playerMove);
+
     }
 }
