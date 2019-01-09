@@ -1,9 +1,6 @@
 import GameComponents.Move;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Ai {
     public List<Move> playerMoves;
@@ -19,10 +16,10 @@ public class Ai {
         this.aiMoves = new ArrayList<>();
         this.playerMoves = new ArrayList<>();
         this.frequentPattern = new ArrayList<>();
-        this.aiLastSixMoves = new LinkedList<>();
+        this.aiLastSixMoves = new LinkedList<>();//player*LastSixMoves
         this.playerRepeatedMoves = 0;
         this.didIWin = 0;
-        this.patternLocation= -1;
+        this.patternLocation = -1;
     }
 
     public void checkRepeatedMoves(int lastMoveIndex) {
@@ -52,38 +49,88 @@ public class Ai {
     }
 
     public void createPatterns() {
-        LinkedList<Move> posiblePattern;
-        LinkedList<Move> checkPattern;
-        int numberOfRepeatedPatterns = 0, j, k;
-        for (int i = 2; i <= this.aiLastSixMoves.size(); i++) {
-            posiblePattern = new LinkedList<>();
-            checkPattern = new LinkedList<>();
+        LinkedList<Move> posiblePattern = new LinkedList<>();
+        LinkedList<Move> checkPattern = new LinkedList<>();
+        int numberOfRepeatedPatterns = 0;
+        int j;
+        int k;
+        int currentEndIndexOfPatternInLastSixMoves;
+        for (int patternLength = 2; patternLength <= 3; patternLength++) {
+            posiblePattern.clear();
+            checkPattern.clear();
 
-            for (j = 0; j < i; j++) {
+            /*for (j = 0; j < i; j++) {
                 posiblePattern.add(this.aiLastSixMoves.get(j));
-                checkPattern.add(this.aiLastSixMoves.get(j));
-            }
+                //checkPattern.add(this.aiLastSixMoves.get(j));
+            }*/
+
+            posiblePattern.addAll(computePattern(patternLength, 0, aiLastSixMoves));
+
+            currentEndIndexOfPatternInLastSixMoves = patternLength - 1;
             int currentPatternFrequency = 1;
-            for (; j < this.aiLastSixMoves.size(); j++) {
-                for (k = j; k < this.aiLastSixMoves.size(); k++) {
-                    checkPattern.removeFirst();
-                    checkPattern.add(this.aiLastSixMoves.get(k));
+
+            for (j = patternLength; j < this.aiLastSixMoves.size() - patternLength + 1; j++) {
+
+                currentPatternFrequency = 1;
+
+                for (k = j; k < this.aiLastSixMoves.size() - patternLength + 1; k++) {
+                    checkPattern.clear();
+                    checkPattern.addAll(computePattern(patternLength, k, aiLastSixMoves));
                     if (comparePatterns(checkPattern, posiblePattern)) {
                         currentPatternFrequency++;
                     }
+
                 }
-                if (currentPatternFrequency > numberOfRepeatedPatterns) {
+                if (currentPatternFrequency >= numberOfRepeatedPatterns && currentPatternFrequency > 1) {
                     numberOfRepeatedPatterns = currentPatternFrequency;
-                    this.frequentPattern = posiblePattern;
+                    this.frequentPattern.clear();
+                    this.frequentPattern.addAll(posiblePattern);
                 }
 
-                posiblePattern.removeFirst();
-                posiblePattern.add(aiLastSixMoves.get(j));
+                posiblePattern.clear();
+                posiblePattern.addAll(computePattern(patternLength, currentEndIndexOfPatternInLastSixMoves, aiLastSixMoves));
+                currentEndIndexOfPatternInLastSixMoves++;
+                /*posiblePattern.removeFirst();
+                posiblePattern.add(aiLastSixMoves.get(j));*/
             }
         }
     }
-    public void checkPatternPosition(int lastMoveIndex){
-        if (this.patternLocation != -1) {
+
+    private LinkedList<Move> computePattern(int patternLength, int startPosition, LinkedList<Move> targetList) {
+        LinkedList resultedList = new LinkedList<Move>();
+
+        for (int i = 0; i < patternLength; i++) {
+            resultedList.add(targetList.get(startPosition + i));
+        }
+
+        return resultedList;
+    }
+
+    public void checkPatternPosition(int lastMoveIndex) {
+        if(this.patternLocation == -1){
+            if (this.frequentPattern.size() != 0){
+                this.patternLocation = 0;
+            }
+            if (this.playerMoves.get(lastMoveIndex).numericValue != this.frequentPattern.get(this.patternLocation).numericValue) {
+                patternLocation = -1;
+                frequentPattern.clear();
+            }
+        } else {
+            if(this.frequentPattern.size() != 0){
+                if (patternLocation + 1 == this.frequentPattern.size()){
+                    this.patternLocation = 0;
+                } else {
+                    this.patternLocation++;
+                }
+                if (this.playerMoves.get(lastMoveIndex).numericValue != this.frequentPattern.get(this.patternLocation).numericValue) {
+                    patternLocation = -1;
+                    frequentPattern.clear();
+                }
+            }
+        }
+
+
+        /*if (this.patternLocation != -1) {
             if (this.playerMoves.get(lastMoveIndex).numericValue == this.frequentPattern.get(this.patternLocation).numericValue) {
                 if (patternLocation + 1 == this.frequentPattern.size())
                     patternLocation = 0;
@@ -95,7 +142,7 @@ public class Ai {
         } else {
             if (this.playerMoves.get(lastMoveIndex).numericValue == this.frequentPattern.get(0).numericValue)
                 this.patternLocation = 0;
-        }
+        }*/
     }
 
     public int pickMove() {
@@ -106,16 +153,17 @@ public class Ai {
         int lastMoveIndex = this.playerMoves.size() - 1;
 
 
-        if (this.frequentPattern.size()>=2)
+        if (this.frequentPattern.size() >= 2)
             this.checkPatternPosition(lastMoveIndex);
 
-        if (patternLocation!=-1){
+        if (patternLocation != -1) {
             int chooseMove;
-            if (patternLocation+1 >= frequentPattern.size())
-                chooseMove=0;
-            else chooseMove=patternLocation+1;
+            if (patternLocation + 1 >= frequentPattern.size())
+                chooseMove = 0;
+            else chooseMove = patternLocation + 1;
             return pickWinerAgains(this.frequentPattern.get(chooseMove));
         }
+
         if (this.aiLastSixMoves.size() >= 4)
             createPatterns();
 
@@ -125,8 +173,6 @@ public class Ai {
         if (playerRepeatedMoves >= 3) {
             return pickWinerAgains(this.playerMoves.get(lastMoveIndex));
         }
-
-
 
         return pickFromLastRun(lastMoveIndex);
 

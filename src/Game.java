@@ -73,7 +73,7 @@ public class Game {
                 break;
             }
         }
-        if (this.ai.aiLastSixMoves.size()<6){
+        if (this.ai.aiLastSixMoves.size()<7){
             this.ai.aiLastSixMoves.add(playerMove);
         }
         else{
